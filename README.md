@@ -10,7 +10,7 @@
 Add `?seed=1234` to the URL to generate a different (reproducible) city. Press F3 in-game for the FPS/draw-call overlay.
 
 ## Status
-Phase 1 complete: engine setup, state machine, procedural 20x20 city, collision, third-person camera, player movement, 60s timer, HUD, menu/pause/game-over.
+Phases 1-3 complete: engine, city, movement, camera, timer, HUD, sprint, dash, health, Neon Blaster, and 3 drone types (scout/combat/heavy) with AI, projectiles, explosions and a time-based spawner.
 
 ## Controls
 WASD move | Mouse look | ESC pause | F3 debug stats

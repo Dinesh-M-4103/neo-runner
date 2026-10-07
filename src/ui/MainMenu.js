@@ -20,7 +20,7 @@ export class MainMenu extends Screen {
           </ul>
           <p>Survive and explore the city. You have <b>60 seconds</b>.</p>
         </div>
-        <p class="footnote">Phase 2 build &mdash; sprint, dash, blaster</p>
+        <p class="footnote">Phase 3 build &mdash; drones</p>
       </div>`
     const buttons = this.el.querySelector('.menu-buttons')
     const howto = this.el.querySelector('.howto')

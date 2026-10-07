@@ -50,6 +50,19 @@ export class EffectsManager {
     this.flashLife = 0
 
     this.dustTimer = 0
+
+    // Explosion fireballs: pooled additive sprites that expand and fade
+    const tex = this.flash.material.map
+    this.fireballs = []
+    for (let i = 0; i < 6; i++) {
+      const sp = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: tex, color: 0xff7a30, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, toneMapped: false })
+      )
+      sp.visible = false
+      scene.add(sp)
+      this.fireballs.push({ sprite: sp, life: 0, max: 0.4, size: 4 })
+    }
+    this.nextFireball = 0
   }
 
   tracer(fx, fy, fz, tx, ty, tz, color = PALETTE.CYAN) {
@@ -84,6 +97,20 @@ export class EffectsManager {
     this.particles.emit(x, y, z, 2, { color: 0xffffff, speed: 2, life: 0.15, size: 0.3, gravity: 0 })
   }
 
+  explosion(x, y, z, scale = 1, color = 0xff7a30) {
+    const pm = this.particles
+    pm.emit(x, y, z, Math.round(34 * scale), { color, speed: 11 * scale, life: 0.75, size: 0.38, gravity: 5, drag: 1.2 })
+    pm.emit(x, y, z, Math.round(16 * scale), { color: PALETTE.MAGENTA, speed: 8 * scale, life: 0.6, size: 0.3, gravity: 3, drag: 1.5 })
+    pm.emit(x, y, z, 8, { color: 0xffffff, speed: 3, life: 0.25, size: 0.9 * scale, gravity: 0 })
+    const f = this.fireballs[this.nextFireball]
+    this.nextFireball = (this.nextFireball + 1) % this.fireballs.length
+    f.sprite.position.set(x, y, z)
+    f.sprite.material.color.setHex(color)
+    f.size = 5 * scale
+    f.life = f.max = 0.4
+    f.sprite.visible = true
+  }
+
   /** Burst at both ends of a dash + streak along the path. */
   dashBurst(x, z) {
     this.particles.emit(x, 1.0, z, 26, { color: PALETTE.CYAN, speed: 7, life: 0.45, size: 0.22, gravity: 2 })
@@ -114,6 +141,14 @@ export class EffectsManager {
     if (this.flashLife > 0) {
       this.flashLife -= dt
       if (this.flashLife <= 0) this.flash.visible = false
+    }
+    for (const f of this.fireballs) {
+      if (f.life <= 0) continue
+      f.life -= dt
+      if (f.life <= 0) { f.sprite.visible = false; continue }
+      const k = 1 - f.life / f.max
+      f.sprite.scale.setScalar(f.size * (0.35 + k))
+      f.sprite.material.opacity = 1 - k
     }
     this.particles.update(dt)
   }

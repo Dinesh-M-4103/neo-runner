@@ -44,6 +44,42 @@ export const WEAPON = {
   AIM_FACING_TIME: 0.35, // player turns to face the crosshair for this long after firing
 }
 
+export const DRONES = {
+  MAX_ENEMIES: 14,
+  DETECT_RANGE: 75,
+  LOSE_RANGE: 130,
+  DESPAWN_RANGE: 150,
+  SPAWN_MIN: 42,
+  SPAWN_MAX: 70,
+  SEPARATION: 4.5, // drones push apart inside this distance
+  TYPES: {
+    scout: {
+      name: 'SCOUT', health: 40, speed: 13, accel: 5, damage: 6, fireInterval: 1.5, windup: 0.3,
+      burst: 1, burstGap: 0, projectileSpeed: 30, projectileSize: 0.7, accuracy: 0.07,
+      preferredDistance: 11, attackRange: 40, radius: 0.75, altitude: 3.6, color: 0xffb347, score: 150, pool: 12,
+    },
+    combat: {
+      name: 'COMBAT', health: 100, speed: 8.5, accel: 3.5, damage: 10, fireInterval: 1.2, windup: 0.25,
+      burst: 3, burstGap: 0.13, projectileSpeed: 34, projectileSize: 0.8, accuracy: 0.045,
+      preferredDistance: 15, attackRange: 48, radius: 1.0, altitude: 4.4, color: 0xff2bd6, score: 300, pool: 8,
+    },
+    heavy: {
+      name: 'HEAVY', health: 300, speed: 4.6, accel: 2, damage: 25, fireInterval: 2.4, windup: 0.65,
+      burst: 1, burstGap: 0, projectileSpeed: 22, projectileSize: 1.6, accuracy: 0.025,
+      preferredDistance: 22, attackRange: 58, radius: 1.7, altitude: 5.6, color: 0xff3355, score: 750, pool: 4,
+    },
+  },
+}
+
+// Phase 3 placeholder difficulty: by seconds elapsed. Phase 4 swaps this for the wanted-level system.
+export const SPAWN_TIERS = [
+  { from: 0, max: 2, types: { scout: 1 } },
+  { from: 12, max: 4, types: { scout: 1 } },
+  { from: 28, max: 6, types: { scout: 3, combat: 2 } },
+  { from: 42, max: 9, types: { scout: 2, combat: 3, heavy: 1 } },
+  { from: 52, max: 12, types: { scout: 2, combat: 3, heavy: 2 } },
+]
+
 export const CAMERA = {
   DISTANCE: 6.5,
   HEIGHT_OFFSET: 1.55, // pivot above player feet

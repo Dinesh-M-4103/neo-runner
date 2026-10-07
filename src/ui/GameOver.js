@@ -9,6 +9,7 @@ export class GameOver extends Screen {
         <dl class="stats">
           <dt>TIME SURVIVED</dt><dd data-k="time">0</dd>
           <dt>DISTANCE</dt><dd data-k="distance">0</dd>
+          <dt>ENEMIES DESTROYED</dt><dd data-k="kills">0</dd>
           <dt>SCORE</dt><dd data-k="score">0</dd>
           <dt>HIGH SCORE</dt><dd data-k="high">0</dd>
         </dl>
@@ -20,10 +21,11 @@ export class GameOver extends Screen {
     buttons.appendChild(this.button('MAIN MENU', onMenu))
   }
 
-  setStats({ time, distance, score, high, record }) {
+  setStats({ time, distance, kills, score, high, record }) {
     const set = (k, v) => (this.el.querySelector(`[data-k="${k}"]`).textContent = v)
     set('time', `${time.toFixed(1)}s`)
     set('distance', `${Math.round(distance)} m`)
+    set('kills', String(kills))
     set('score', score.toLocaleString())
     set('high', high.toLocaleString())
     this.el.querySelector('.record').hidden = !record

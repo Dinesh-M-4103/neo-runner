@@ -10,6 +10,9 @@ import { PlayerController } from '../player/PlayerController.js'
 import { CameraController } from '../player/CameraController.js'
 import { Weapon } from '../player/Weapon.js'
 import { EffectsManager } from '../effects/EffectsManager.js'
+import { EnemyManager } from '../enemies/EnemyManager.js'
+import { SpawnSystem } from '../systems/SpawnSystem.js'
+import { DamageNumbers } from '../ui/DamageNumbers.js'
 import { TimerSystem } from '../systems/TimerSystem.js'
 import { ScoreSystem } from '../systems/ScoreSystem.js'
 import { HUD } from '../ui/HUD.js'
@@ -106,6 +109,9 @@ export class Game {
         camera: this.camera, cameraCtl: this.cameraCtl, collision: this.city.collision,
         effects: this.effects, player: this.player,
       })
+      this.enemies = new EnemyManager(this.scene, { collision: this.city.collision, effects: this.effects })
+      this.weapon.targets = this.enemies.all
+      this.spawner = new SpawnSystem(this.enemies)
       this._wirePlayerEvents()
       this.timer = new TimerSystem(GAME.GAME_DURATION)
       this.score = new ScoreSystem(this.save)
@@ -145,6 +151,24 @@ export class Game {
     this.controller.onDashTick = (x, z) => this.effects.dashTrail(x, z)
 
     this.weapon.onHitTarget = () => this.hud.hitMarker()
+
+    // Enemies -> score / feedback
+    this.enemies.onDamaged = (d, amount, point) => {
+      if (point) this.damageNumbers.show(point.x, point.y + 0.4, point.z, String(amount))
+    }
+    this.enemies.onKilled = (d) => {
+      const pos = d.position
+      this.score.add(d.cfg.score)
+      this.effects.explosion(pos.x, pos.y, pos.z, d.type === 'heavy' ? 2.2 : d.type === 'combat' ? 1.4 : 1)
+      const dist = Math.hypot(pos.x - this.player.position.x, pos.z - this.player.position.z)
+      this.cameraCtl.addShake(Math.max(0, 1 - dist / 45) * (d.type === 'heavy' ? 0.7 : 0.35))
+      this.damageNumbers.show(pos.x, pos.y + 1, pos.z, `+${d.cfg.score}`, 'kill')
+    }
+    this.enemies.onPlayerHit = (damage) => {
+      if (this.damagePlayer(damage)) {
+        this.damageNumbers.show(this.player.position.x, 2.4, this.player.position.z, `-${damage}`, 'player')
+      }
+    }
   }
 
   /** Public damage entry point (drones will call this in Phase 3). Returns true if it landed. */
@@ -155,6 +179,7 @@ export class Game {
 
   _buildUI() {
     this.hud = new HUD(this.uiRoot)
+    this.damageNumbers = new DamageNumbers(this.uiRoot, this.camera)
     this.menu = new MainMenu(this.uiRoot, { onStart: () => this.startRun() })
     this.pauseMenu = new PauseMenu(this.uiRoot, {
       onResume: () => this.resume(),
@@ -222,6 +247,9 @@ export class Game {
     this.timer.reset()
     this.score.reset()
     this.weapon.reset()
+    this.enemies.reset()
+    this.spawner.reset()
+    this.damageNumbers.clear()
     this.cameraCtl.reset(this.player)
     this.input.reset()
 
@@ -260,6 +288,7 @@ export class Game {
     this.gameOver.setStats({
       time: this.timer.elapsed,
       distance: this.player.distance,
+      kills: this.enemies.kills,
       score: this.score.score,
       high: this.save.highScore,
       record,
@@ -287,6 +316,8 @@ export class Game {
       this.camera.updateMatrixWorld()
       const fire = this.input.locked && this.input.mouseDown(0) && !p.dashing
       this.weapon.update(dt, fire, this.input.wasPressed('KeyR'))
+      this.spawner.update(dt, this.timer.elapsed, p)
+      this.enemies.update(dt, p)
       if (p.sprinting) this.effects.sprintDust(dt, p.position.x, p.position.z)
       this.environment.update(p.position)
       const w = this.weapon
@@ -313,7 +344,7 @@ export class Game {
     if (this.hud.debugVisible) {
       const info = this.renderer.info
       this.hud.setDebug(
-        `FPS        ${this.fps.toFixed(0)}\nDRAW CALLS ${info.render.calls}\nTRIANGLES  ${info.render.triangles}\nENEMIES    0`
+        `FPS        ${this.fps.toFixed(0)}\nDRAW CALLS ${info.render.calls}\nTRIANGLES  ${info.render.triangles}\nENEMIES    ${this.enemies.activeCount}`
       )
     }
     this.input.endFrame()
