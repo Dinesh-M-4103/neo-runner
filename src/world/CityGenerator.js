@@ -3,6 +3,7 @@ import { CITY } from '../utils/Constants.js'
 import { SeededRandom } from '../utils/MathUtils.js'
 import { CollisionWorld } from './CollisionWorld.js'
 import { createBuildingMaterial, generateLot } from './Building.js'
+import { createHologramMaterial } from './HologramMaterial.js'
 import { generateRoadSegment, roadCoord } from './Road.js'
 
 // Shared geometry/materials: built once, reused by every chunk (and by every regeneration).
@@ -32,6 +33,7 @@ function createMaterials() {
     poles: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5, metalness: 0.6 }),
     // Unlit neon: toneMapped=false keeps colours saturated instead of ACES-greying them.
     neon: new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }),
+    holo: createHologramMaterial(),
     lamps: new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }),
     dashes: new THREE.MeshBasicMaterial({ color: 0xffffff }),
     pools: new THREE.MeshBasicMaterial({
@@ -47,7 +49,7 @@ function createMaterials() {
 
 const GEOMETRY = {
   buildings: UNIT_BOX, slabs: UNIT_BOX, props: UNIT_BOX, poles: UNIT_BOX,
-  neon: UNIT_BOX, lamps: UNIT_BOX, dashes: UNIT_BOX, pools: POOL_PLANE,
+  neon: UNIT_BOX, holo: UNIT_BOX, lamps: UNIT_BOX, dashes: UNIT_BOX, pools: POOL_PLANE,
 }
 
 /** Collects instance data for one spatial chunk, then bakes one InstancedMesh per layer. */
@@ -193,6 +195,11 @@ export class City {
       for (const mesh of ch.group.children) this.stats.instances += mesh.count
     }
     this.stats.buildings = collision.boxes.length
+  }
+
+  /** Advance time-driven shaders (hologram billboards). */
+  update(time) {
+    this.materials.holo.uniforms.uTime.value = time
   }
 
   /** Distance-based chunk visibility (on top of frustum culling). Cheap: 16 chunks. */

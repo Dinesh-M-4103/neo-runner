@@ -1,5 +1,8 @@
 /** Tiny base class for full-screen HTML overlays (menus, result screens, loading). */
 export class Screen {
+  /** Optional global hook (audio click sound) */
+  static onClick = null
+
   constructor(root, className) {
     this.el = document.createElement('div')
     this.el.className = `screen ${className}`
@@ -23,6 +26,7 @@ export class Screen {
     b.textContent = label
     b.addEventListener('click', (e) => {
       e.stopPropagation()
+      if (Screen.onClick) Screen.onClick()
       onClick()
     })
     return b

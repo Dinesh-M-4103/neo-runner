@@ -111,6 +111,18 @@ export class EffectsManager {
     f.sprite.visible = true
   }
 
+  pickupBurst(x, y, z, color, scale = 1) {
+    this.particles.emit(x, y, z, Math.round(18 * scale), { color, speed: 5 * scale, life: 0.5, size: 0.2, gravity: -2, drag: 2 })
+    this.particles.emit(x, y, z, 5, { color: 0xffffff, speed: 1.5, life: 0.25, size: 0.4 * scale, gravity: 0 })
+    const f = this.fireballs[this.nextFireball]
+    this.nextFireball = (this.nextFireball + 1) % this.fireballs.length
+    f.sprite.position.set(x, y, z)
+    f.sprite.material.color.setHex(color)
+    f.size = 2.2 * scale
+    f.life = f.max = 0.25
+    f.sprite.visible = true
+  }
+
   /** Burst at both ends of a dash + streak along the path. */
   dashBurst(x, z) {
     this.particles.emit(x, 1.0, z, 26, { color: PALETTE.CYAN, speed: 7, life: 0.45, size: 0.22, gravity: 2 })

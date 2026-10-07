@@ -115,6 +115,9 @@ export function updateDrone(d, dt, ctx) {
       break
   }
 
+  const aggr = ctx.aggression || 1
+  goalSpeed *= aggr
+
   // ---- steering: detour, separation, knockback --------------------------------------------
   let dx = goalX, dz = goalZ
   if (d.detour > 0 && goalSpeed > 0) {
@@ -205,7 +208,7 @@ function updateFiring(d, dt, ctx, dist) {
     return
   }
 
-  d.fireTimer -= dt
+  d.fireTimer -= dt * (ctx.aggression || 1)
   if (d.fireTimer <= 0 && d.hasLOS) d.windup = cfg.windup
 }
 

@@ -170,7 +170,7 @@ function buildBuilding(rng, bx, bz, w, d, height, emit, addCollider) {
     const alongX = rng.chance(0.5)
     const bw = Math.min(alongX ? w : d, 14) * 0.8
     emit('props', bx, topY, bz, alongX ? 0.4 : 0.4, 2.2, alongX ? 0.4 : 0.4, 0x15171f)
-    emit('neon', bx, topY + 2.2, bz, alongX ? bw : 0.45, 4.2, alongX ? 0.45 : bw, c)
+    emit('holo', bx, topY + 2.2, bz, alongX ? bw : 0.45, 4.2, alongX ? 0.45 : bw, c)
   }
 
   // Rooftop equipment (vents, AC units, tanks) + antennas

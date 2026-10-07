@@ -21,6 +21,24 @@ export class HUD {
         <div class="sub"><span class="label">DIST</span><span data-k="distance">0</span><span class="unit">m</span></div>
       </div>
 
+      <div class="hud-wanted" data-k="wanted">
+        <span class="label">WANTED</span>
+        <div class="stars">
+          <i></i><i></i><i></i><i></i><i></i>
+        </div>
+        <div class="level" data-k="wantedLevel">0</div>
+        <div class="track heat"><div class="fill" data-k="heatFill"></div></div>
+      </div>
+
+      <div class="hud-combo" data-k="combo">
+        <span class="mult" data-k="comboMult">x1</span>
+        <div class="track"><div class="fill" data-k="comboFill"></div></div>
+      </div>
+      <div class="hud-cores"><span class="label">CORES</span><span class="value" data-k="cores">0</span></div>
+
+      <div class="hud-banner" data-k="banner"></div>
+      <div class="hud-zone" data-k="zone">RESTRICTED AREA &mdash; WANTED RISING</div>
+
       <div class="crosshair" data-k="crosshair"><i></i><i></i><i></i><i></i></div>
 
       <div class="hud-weapon">
@@ -35,6 +53,9 @@ export class HUD {
         <div class="track"><div class="fill" data-k="dashFill"></div></div>
         <span class="key"><kbd>SPACE</kbd></span>
       </div>
+
+      <div class="hud-portal" data-k="portal"><div class="arrow" data-k="portalArrow"></div><div class="diamond"></div><span data-k="portalDist">0m</span></div>
+      <div class="hud-flash" data-k="flash"></div>
 
       <div class="hud-hint" data-k="hint">CLICK TO CAPTURE MOUSE</div>
       <div class="hud-controls" data-k="controls">
@@ -102,6 +123,29 @@ export class HUD {
     this._class('weaponName', 'reloading', s.reloading)
     this._class('reloadText', 'on', s.reloading)
 
+    // wanted level
+    if (this.cache.wl !== s.wantedLevel) {
+      this.cache.wl = s.wantedLevel
+      this.refs.wanted.dataset.level = String(s.wantedLevel)
+      const stars = this.refs.wanted.querySelectorAll('.stars i')
+      stars.forEach((el, i) => el.classList.toggle('on', i < s.wantedLevel))
+      this.refs.wantedLevel.textContent = String(s.wantedLevel)
+    }
+    this._width('heatFill', s.wantedProgress)
+    this._class('wanted', 'zone', s.inZone)
+    this._class('zone', 'on', s.inZone)
+
+    // combo + cores
+    this._class('combo', 'on', s.comboMult > 1 || s.comboFraction > 0)
+    this._set('comboMult', `x${s.comboMult}`)
+    this._class('combo', 'hot', s.comboMult >= 3)
+    this._width('comboFill', s.comboFraction)
+    this._set('cores', String(s.cores))
+
+    // low-time urgency overlay
+    this._class('lowtime', 'on', whole <= 10)
+    this._class('lowtime', 'crit', whole <= 5)
+
     const ready = s.dashCooldown <= 0
     this._width('dashFill', ready ? 1 : 1 - s.dashCooldown / s.dashCooldownMax)
     this._class('dash', 'ready', ready)
@@ -113,6 +157,43 @@ export class HUD {
     el.classList.remove('flash')
     void el.offsetWidth
     el.classList.add('flash')
+  }
+
+  /** Big centre-screen message (wanted level up, etc). */
+  banner(text, cls = '') {
+    const el = this.refs.banner
+    el.textContent = text
+    el.className = 'hud-banner'
+    void el.offsetWidth
+    el.className = `hud-banner show ${cls}`
+  }
+
+  resetTransient() {
+    this.refs.banner.className = 'hud-banner'
+    this.refs.damage.classList.remove('flash')
+    this.cache.wl = -1
+  }
+
+  /**
+   * Portal marker in normalised device coords. On screen: a diamond over the portal.
+   * Off screen: an arrow glued to the screen edge pointing the way.
+   */
+  setPortalMarker(ndcX, ndcY, onScreen, metres) {
+    const el = this.refs.portal
+    el.style.left = `${(ndcX * 0.5 + 0.5) * 100}%`
+    el.style.top = `${(-ndcY * 0.5 + 0.5) * 100}%`
+    el.classList.toggle('off', !onScreen)
+    if (!onScreen) this.refs.portalArrow.style.transform = `rotate(${Math.atan2(-ndcY, ndcX) + Math.PI / 2}rad)`
+    this._set('portalDist', `${Math.round(metres)}m`)
+  }
+
+  setPortalVisible(v) {
+    this.refs.portal.style.display = v ? '' : 'none'
+  }
+
+  /** White flash (escape sequence). strength 0..1 */
+  setFlash(strength) {
+    this.refs.flash.style.opacity = String(strength)
   }
 
   hitMarker() {
