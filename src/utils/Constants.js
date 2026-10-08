@@ -44,6 +44,78 @@ export const WEAPON = {
   AIM_FACING_TIME: 0.35, // player turns to face the crosshair for this long after firing
 }
 
+export const DRONES = {
+  MAX_ENEMIES: 14,
+  DETECT_RANGE: 75,
+  LOSE_RANGE: 130,
+  DESPAWN_RANGE: 150,
+  SPAWN_MIN: 42,
+  SPAWN_MAX: 70,
+  SEPARATION: 4.5, // drones push apart inside this distance
+  TYPES: {
+    scout: {
+      name: 'SCOUT', health: 40, speed: 13, accel: 5, damage: 6, fireInterval: 1.5, windup: 0.3,
+      burst: 1, burstGap: 0, projectileSpeed: 30, projectileSize: 0.7, accuracy: 0.07,
+      preferredDistance: 11, attackRange: 40, radius: 0.75, altitude: 3.6, color: 0xffb347, score: 150, pool: 12,
+    },
+    combat: {
+      name: 'COMBAT', health: 100, speed: 8.5, accel: 3.5, damage: 10, fireInterval: 1.2, windup: 0.25,
+      burst: 3, burstGap: 0.13, projectileSpeed: 34, projectileSize: 0.8, accuracy: 0.045,
+      preferredDistance: 15, attackRange: 48, radius: 1.0, altitude: 4.4, color: 0xff2bd6, score: 300, pool: 8,
+    },
+    heavy: {
+      name: 'HEAVY', health: 300, speed: 4.6, accel: 2, damage: 25, fireInterval: 2.4, windup: 0.65,
+      burst: 1, burstGap: 0, projectileSpeed: 22, projectileSize: 1.6, accuracy: 0.025,
+      preferredDistance: 22, attackRange: 58, radius: 1.7, altitude: 5.6, color: 0xff3355, score: 750, pool: 4,
+    },
+  },
+}
+
+// ---- Wanted level (0-5). Heat accumulates; thresholds[i] = heat needed to reach level i. ----
+export const WANTED_THRESHOLDS = [0, 14, 32, 56, 86, 125]
+export const WANTED = {
+  SURVIVE_PER_SEC: 0.55,
+  ZONE_PER_SEC: 7, // standing in a restricted area
+  CORE: 1.5,
+  RICH_CORE: 4,
+  KILL: { scout: 4, combat: 7, heavy: 14 },
+}
+
+// What each wanted level spawns. `interval` = seconds between spawns while below `max`.
+export const WANTED_SPAWN = [
+  { max: 1, interval: 3.0, types: { scout: 1 } }, // L0: almost nothing
+  { max: 3, interval: 2.2, types: { scout: 1 } }, // L1: scouts
+  { max: 5, interval: 1.8, types: { scout: 1 } }, // L2: more scouts
+  { max: 7, interval: 1.5, types: { scout: 3, combat: 2 } }, // L3: combat drones
+  { max: 9, interval: 1.3, types: { scout: 2, combat: 3, heavy: 1 } }, // L4: heavies
+  { max: 12, interval: 1.0, types: { scout: 2, combat: 4, heavy: 2 } }, // L5: elite pursuit
+]
+
+// Time pressure on top of the wanted level (by seconds REMAINING). Matches the spec's difficulty curve.
+export const TIME_PRESSURE = [
+  { remaining: 45, extraMax: 1 }, // more drones
+  { remaining: 30, extraMax: 2, minTypes: { combat: 2 } }, // combat drones
+  { remaining: 15, extraMax: 3, minTypes: { combat: 2, heavy: 1 } }, // heavy drones
+  { remaining: 10, extraMax: 5, minTypes: { combat: 3, heavy: 1 }, intervalMul: 0.6, aggression: 1.2 }, // extreme pursuit
+]
+
+export const COMBO = { WINDOW: 4, PER_STEP: 3, MAX_MULT: 5 }
+
+export const PICKUPS = {
+  CORE_COUNT: 70,
+  CORE_VALUE: 100,
+  RICH_VALUE: 250,
+  ZONE_CORES: 4, // premium cores per restricted zone
+  HEALTH_COUNT: 6,
+  HEALTH_HEAL: 35,
+  DROP_HEAL: 25,
+  DROP_CHANCE: 0.18,
+  MAGNET_RANGE: 5,
+  COLLECT_RANGE: 1.25,
+}
+
+export const ZONES = { COUNT: 5, RADIUS: 12, MIN_FROM_START: 150, MIN_SPACING: 130 }
+
 export const CAMERA = {
   DISTANCE: 6.5,
   HEIGHT_OFFSET: 1.55, // pivot above player feet
@@ -105,5 +177,27 @@ export const STORAGE_KEYS = {
 }
 
 export const DEFAULT_SETTINGS = {
+  masterVolume: 0.8,
+  musicVolume: 0.5,
+  sfxVolume: 0.8,
+  quality: 'high', // low | medium | high
   mouseSensitivity: 1,
+  screenShake: true,
+  postProcessing: true,
+}
+
+// Graphics quality presets (applied live from the settings menu)
+export const QUALITY = {
+  low: { pixelRatio: 1, bloom: false, rain: 0.35, viewDistance: 300 },
+  medium: { pixelRatio: 1.5, bloom: true, rain: 0.7, viewDistance: 380 },
+  high: { pixelRatio: 2, bloom: true, rain: 1, viewDistance: 450 },
+}
+
+export const PORTAL = {
+  RADIUS: 3.8, // trigger distance (m)
+  MIN_DIST: 270, // from the start (m): far enough to need a real run, close enough to reach in 60s
+  MAX_DIST: 380,
+  EXTRACTION_BONUS: 2000,
+  TIME_BONUS_PER_SEC: 40,
+  ESCAPE_DURATION: 3.0, // seconds of escape cinematic before the result screen
 }

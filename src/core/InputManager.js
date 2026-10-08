@@ -16,6 +16,8 @@ export class InputManager {
     this.mouseDY = 0
     this.locked = false
     this.moveAxis = { x: 0, y: 0 } // x: right+, y: forward+
+    this.touchMode = false // set by TouchInput
+    this.touchAxis = { x: 0, y: 0 }
     this.onEscape = null
     this.onLockChange = null
 
@@ -38,6 +40,7 @@ export class InputManager {
     window.addEventListener('contextmenu', (e) => e.preventDefault())
 
     document.addEventListener('pointerlockchange', () => {
+      if (this.touchMode) return
       this.locked = document.pointerLockElement === this.canvas
       if (!this.locked) this.reset()
       if (this.onLockChange) this.onLockChange(this.locked)
@@ -45,6 +48,7 @@ export class InputManager {
   }
 
   requestLock() {
+    if (this.touchMode) return
     try {
       const p = this.canvas.requestPointerLock()
       if (p && p.catch) p.catch(() => {})
@@ -58,7 +62,8 @@ export class InputManager {
   }
 
   reset() {
-    this.keys.clear()
+    this.touchAxis.x = this.touchAxis.y = 0
+    if (!this.touchMode) this.keys.clear()
     this.mouseButtons.clear()
     this.pressedThisFrame.clear()
     this.mouseDX = 0
@@ -79,6 +84,11 @@ export class InputManager {
 
   /** Updates and returns the shared movement axis object (no allocation). */
   getMoveAxis() {
+    if (this.touchMode) {
+      this.moveAxis.x = this.touchAxis.x
+      this.moveAxis.y = this.touchAxis.y
+      return this.moveAxis
+    }
     const k = this.keys
     const axis = this.moveAxis
     axis.x = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0)
