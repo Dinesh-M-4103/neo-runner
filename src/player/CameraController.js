@@ -129,6 +129,29 @@ export class CameraController {
     }
   }
 
+  /**
+   * Escape cinematic: sweeps in an arc around the portal, slowly pulling back, with a FOV punch.
+   * t = seconds since the escape began; (px, pz) = portal position.
+   */
+  updateEscape(dt, t, px, pz) {
+    this.time += dt
+    const cam = this.camera
+    const ang = this.yaw + 0.9 + t * 0.55
+    const dist = 11 + t * 3.2
+    const tx = px + Math.sin(ang) * dist
+    const tz = pz + Math.cos(ang) * dist
+    const ty = 3.2 + t * 1.6
+    cam.position.x += (tx - cam.position.x) * Math.min(1, 4 * dt)
+    cam.position.y += (ty - cam.position.y) * Math.min(1, 4 * dt)
+    cam.position.z += (tz - cam.position.z) * Math.min(1, 4 * dt)
+    this._look.set(px, 4.2, pz)
+    cam.lookAt(this._look)
+    const targetFov = 68 + Math.min(1, t * 0.6) * 22 + Math.sin(t * 6) * Math.max(0, 1 - t) * 4
+    this.fov += (targetFov - this.fov) * Math.min(1, 5 * dt)
+    cam.fov = this.fov
+    cam.updateProjectionMatrix()
+  }
+
   /** Cinematic dolly down a main road, used behind the main menu. */
   updateMenu(dt) {
     this.time += dt

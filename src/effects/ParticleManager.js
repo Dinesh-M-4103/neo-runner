@@ -11,7 +11,7 @@ const VERT = /* glsl */ `
     vColor = aColor;
     vAlpha = aAlpha;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = aSize * uScale / max(0.1, -mv.z);
+    gl_PointSize = min(aSize * uScale / max(0.1, -mv.z), 72.0);
     gl_Position = projectionMatrix * mv;
   }
 `

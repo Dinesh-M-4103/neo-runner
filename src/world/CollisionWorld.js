@@ -36,7 +36,7 @@ export class CollisionWorld {
   }
 
   /** Push a circle (x,z,r) out of all boxes. Mutates and returns `pos` ({x,z}). */
-  resolveCircle(pos, r) {
+  resolveCircle(pos, r, minHeight = 0) {
     for (let iter = 0; iter < 3; iter++) {
       let moved = false
       const ix0 = Math.floor((pos.x - r) / CELL), ix1 = Math.floor((pos.x + r) / CELL)
@@ -47,6 +47,7 @@ export class CollisionWorld {
           if (!list) continue
           for (let i = 0; i < list.length; i++) {
             const b = list[i]
+            if (b.height < minHeight) continue
             const cx = pos.x < b.minX ? b.minX : pos.x > b.maxX ? b.maxX : pos.x
             const cz = pos.z < b.minZ ? b.minZ : pos.z > b.maxZ ? b.maxZ : pos.z
             const dx = pos.x - cx, dz = pos.z - cz
@@ -76,6 +77,26 @@ export class CollisionWorld {
     pos.x = pos.x < bd.minX + r ? bd.minX + r : pos.x > bd.maxX - r ? bd.maxX - r : pos.x
     pos.z = pos.z < bd.minZ + r ? bd.minZ + r : pos.z > bd.maxZ - r ? bd.maxZ - r : pos.z
     return pos
+  }
+
+  /** True if the XZ point (with radius) is clear of every box taller than minHeight. */
+  isFree(x, z, r, minHeight = 0) {
+    const ix0 = Math.floor((x - r) / CELL), ix1 = Math.floor((x + r) / CELL)
+    const iz0 = Math.floor((z - r) / CELL), iz1 = Math.floor((z + r) / CELL)
+    const bd = this.bounds
+    if (x < bd.minX + r || x > bd.maxX - r || z < bd.minZ + r || z > bd.maxZ - r) return false
+    for (let ix = ix0; ix <= ix1; ix++) {
+      for (let iz = iz0; iz <= iz1; iz++) {
+        const list = this.cells.get(this._key(ix, iz))
+        if (!list) continue
+        for (let i = 0; i < list.length; i++) {
+          const b = list[i]
+          if (b.height < minHeight) continue
+          if (x + r > b.minX && x - r < b.maxX && z + r > b.minZ && z - r < b.maxZ) return false
+        }
+      }
+    }
+    return true
   }
 
   /**
